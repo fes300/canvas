@@ -1,11 +1,12 @@
 ## Install dependencies
 
 ```sh
-> spago install
+> yarn install
 ```
 
-## Start the project wth parcel
+## Start the project with parcel and spago
 
 ```sh
-> yarn dev
+> yarn build:w # build and watch
+> yarn server # starts a parcel server
 ```

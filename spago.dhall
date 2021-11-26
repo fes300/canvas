@@ -23,9 +23,11 @@ to generate this file without the comments in this block.
   , "partial"
   , "prelude"
   , "psci-support"
+  , "random"
   , "transformers"
   , "unsafe-coerce"
   , "web-dom"
+  , "math"
   , "web-html"
   ]
 , packages = ./packages.dhall

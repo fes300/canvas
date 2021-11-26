@@ -7,8 +7,10 @@
     "test": "test"
   },
   "scripts": {
+    "postinstall": "spago install",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "parcel index.html"
+    "build:w": "spago build --watch",
+    "server": "parcel index.html"
   },
   "author": "",
   "license": "ISC",
