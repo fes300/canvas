@@ -10,12 +10,14 @@
     "postinstall": "spago install",
     "test": "echo \"Error: no test specified\" && exit 1",
     "build:w": "spago build --watch",
-    "server": "parcel index.html"
+    "server": "parcel index.html",
+    "dev": "concurrently 'yarn build:w' 'yarn server' --raw"
   },
   "author": "",
   "license": "ISC",
   "devDependencies": {
     "@rowtype-yoga/prettier-plugin-purescript": "^1.11.2",
+    "concurrently": "^6.4.0",
     "parcel": "^2.0.0",
     "prettier": "^2.4.1"
   }

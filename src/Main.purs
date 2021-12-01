@@ -1,5 +1,6 @@
 module Main
   ( PersonOptions
+  , Velocity
   , main
   ) where
 
@@ -9,7 +10,7 @@ import Data.Int (toNumber)
 import Effect (Effect)
 import Effect.Console (log)
 import Effect.Random (randomRange)
-import Graphics.Canvas (CanvasElement, Context2D, arc, beginPath, clearRect, fill, fillPath, getContext2D, restore, save, setFillStyle, stroke, translate)
+import Graphics.Canvas as Canvas
 import Math as Math
 import Web.HTML (window)
 import Web.HTML.Window (requestAnimationFrame)
@@ -36,52 +37,69 @@ sanePersonColor :: String
 sanePersonColor = "#FFF"
 
 type PersonOptions
-  = { x :: Number, y :: Number, vel :: Number }
+  = { x :: Number, y :: Number, vel :: Velocity }
+type Velocity
+  = { x :: Number, y :: Number }
 
-draw :: Context2D -> PersonOptions -> Effect Unit
+isOutOfXBound :: Number -> Boolean
+isOutOfXBound x =
+  let
+    leftBoundary = x - personRadius
+    rightBoundary = x + personRadius
+  in
+    leftBoundary <= 0.0 || rightBoundary >= canvasWidth
+
+isOutOfYBound :: Number -> Boolean
+isOutOfYBound y =
+  let
+    leftBoundary = y - personRadius
+    rightBoundary = y + personRadius
+  in
+    leftBoundary <= 0.0 || rightBoundary >= canvasWidth
+
+draw :: Canvas.Context2D -> PersonOptions -> Effect Unit
 draw ctx options = do
   _ <-
-    clearRect ctx
+    Canvas.clearRect ctx
       { x: 0.0
       , y: 0.0
       , width: canvasWidth
       , height: canvasHeight
       }
-  _ <- save ctx
-  _ <- setFillStyle ctx sanePersonColor
-  _ <- translate ctx { translateX: options.x, translateY: options.y }
-  _ <- beginPath ctx
+  _ <- Canvas.save ctx
+  _ <- Canvas.setFillStyle ctx sanePersonColor
+  _ <- Canvas.translate ctx { translateX: options.x, translateY: options.y }
+  _ <- Canvas.beginPath ctx
   _ <-
-    arc ctx
+    Canvas.arc ctx
       { x: 0.0
       , y: 0.0
       , radius: personRadius
       , start: 0.0
       , end: Math.tau
       }
-  _ <- fill ctx
-  _ <- stroke ctx
-  _ <- restore ctx
+  _ <- Canvas.fill ctx
+  _ <- Canvas.stroke ctx
+  _ <- Canvas.restore ctx
   win <- window
-  _ <-
-    requestAnimationFrame
-      ( draw ctx
-          options
-            { x = options.x + options.vel
-            , y = options.y + options.vel
-            }
-      )
-      win
+  let
+    newY = options.y + options.vel.y
+    newX = options.x + options.vel.x
+    newVelX = options.vel.x * if (isOutOfXBound newX) then -1.0 else 1.0
+    newVelY = options.vel.y * if (isOutOfYBound newY) then -1.0 else 1.0
+    newOptions = { x: newX, y: newY, vel: { x: newVelX, y: newVelY } }
+  _ <- requestAnimationFrame (draw ctx newOptions) win
   pure unit
 
 main :: Effect Unit
 main = do
   _ <- cleanBody
   canvas <- createCanvasElement canvasHeightInt canvasWidthInt
-  ctx <- getContext2D canvas
-  vel <- randomRange (-1.0) 1.0
+  ctx <- Canvas.getContext2D canvas
+  velX <- randomRange (-1.0) 1.0
+  velY <- randomRange (-1.0) 1.0
   draw ctx
     { x: canvasWidth / 2.0
     , y: canvasHeight / 2.0
-    , vel: vel
+    , vel: { x: velX, y: velY }
     }
