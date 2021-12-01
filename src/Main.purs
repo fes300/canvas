@@ -92,6 +92,13 @@ updatePeople oldPeople = map updatePerson oldPeople
 
 draw :: Canvas.Context2D -> List PersonOptions -> Effect Unit
 draw ctx people = do
+  _ <-
+    Canvas.clearRect ctx
+      { x: 0.0
+      , y: 0.0
+      , width: canvasWidth
+      , height: canvasHeight
+      }
   _ <- traverse (\o -> drawPerson ctx o) people
   win <- window
   let newPeople = updatePeople people
@@ -102,8 +109,8 @@ randomPersonOption :: Effect PersonOptions
 randomPersonOption = do
   velX <- randomRange (-2.0) 2.0
   velY <- randomRange (-2.0) 2.0
-  centerX <- randomRange 0.0 canvasWidth
-  centerY <- randomRange 0.0 canvasHeight
+  centerX <- randomRange personRadius (canvasWidth - personRadius)
+  centerY <- randomRange personRadius (canvasHeight - personRadius)
   pure { x: centerX, y: centerY, vel: { x: velX, y: velY } }
 
 main :: Effect Unit
@@ -111,6 +118,5 @@ main = do
   _ <- cleanBody
   canvas <- createCanvasElement canvasHeightInt canvasWidthInt
   ctx <- Canvas.getContext2D canvas
-  -- personOption <- randomPersonOption
   options <- traverse (\_ -> randomPersonOption) (range 1 10)
   draw ctx options
