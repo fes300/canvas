@@ -91,15 +91,18 @@ draw ctx options = do
   _ <- requestAnimationFrame (draw ctx newOptions) win
   pure unit
 
+randomPersonOption :: Effect PersonOptions
+randomPersonOption = do
+  velX <- randomRange (-2.0) 2.0
+  velY <- randomRange (-2.0) 2.0
+  centerX <- randomRange 0.0 canvasWidth
+  centerY <- randomRange 0.0 canvasHeight
+  pure { x: centerX, y: centerY, vel: { x: velX, y: velY } }
+
 main :: Effect Unit
 main = do
   _ <- cleanBody
   canvas <- createCanvasElement canvasHeightInt canvasWidthInt
   ctx <- Canvas.getContext2D canvas
-  velX <- randomRange (-1.0) 1.0
-  velY <- randomRange (-1.0) 1.0
-  draw ctx
-    { x: canvasWidth / 2.0
-    , y: canvasHeight / 2.0
-    , vel: { x: velX, y: velY }
-    }
+  personOption <- randomPersonOption
+  draw ctx personOption
