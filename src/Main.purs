@@ -7,8 +7,9 @@ module Main
 import Prelude
 import Canvas.Utils (cleanBody, createCanvasElement)
 import Data.Int (toNumber)
+import Data.List (List, range)
+import Data.Traversable (traverse)
 import Effect (Effect)
-import Effect.Console (log)
 import Effect.Random (randomRange)
 import Graphics.Canvas as Canvas
 import Math as Math
@@ -57,15 +58,8 @@ isOutOfYBound y =
   in
     leftBoundary <= 0.0 || rightBoundary >= canvasWidth
 
-draw :: Canvas.Context2D -> PersonOptions -> Effect Unit
-draw ctx options = do
-  _ <-
-    Canvas.clearRect ctx
-      { x: 0.0
-      , y: 0.0
-      , width: canvasWidth
-      , height: canvasHeight
-      }
+drawPerson :: Canvas.Context2D -> PersonOptions -> Effect Unit
+drawPerson ctx options = do
   _ <- Canvas.save ctx
   _ <- Canvas.setFillStyle ctx sanePersonColor
   _ <- Canvas.translate ctx { translateX: options.x, translateY: options.y }
@@ -81,14 +75,27 @@ draw ctx options = do
   _ <- Canvas.fill ctx
   _ <- Canvas.stroke ctx
   _ <- Canvas.restore ctx
+  pure unit
+
+updatePeople :: List PersonOptions -> List PersonOptions
+updatePeople oldPeople = map updatePerson oldPeople
+  where
+  updatePerson :: PersonOptions -> PersonOptions
+  updatePerson op =
+    let
+      newY = op.y + op.vel.y
+      newX = op.x + op.vel.x
+      newVelX = op.vel.x * if (isOutOfXBound newX) then -1.0 else 1.0
+      newVelY = op.vel.y * if (isOutOfYBound newY) then -1.0 else 1.0
+    in
+      { x: newX, y: newY, vel: { x: newVelX, y: newVelY } }
+
+draw :: Canvas.Context2D -> List PersonOptions -> Effect Unit
+draw ctx people = do
+  _ <- traverse (\o -> drawPerson ctx o) people
   win <- window
-  let
-    newY = options.y + options.vel.y
-    newX = options.x + options.vel.x
-    newVelX = options.vel.x * if (isOutOfXBound newX) then -1.0 else 1.0
-    newVelY = options.vel.y * if (isOutOfYBound newY) then -1.0 else 1.0
-    newOptions = { x: newX, y: newY, vel: { x: newVelX, y: newVelY } }
-  _ <- requestAnimationFrame (draw ctx newOptions) win
+  let newPeople = updatePeople people
+  _ <- requestAnimationFrame (draw ctx newPeople) win
   pure unit
 
 randomPersonOption :: Effect PersonOptions
@@ -104,5 +111,6 @@ main = do
   _ <- cleanBody
   canvas <- createCanvasElement canvasHeightInt canvasWidthInt
   ctx <- Canvas.getContext2D canvas
-  personOption <- randomPersonOption
-  draw ctx personOption
+  -- personOption <- randomPersonOption
+  options <- traverse (\_ -> randomPersonOption) (range 1 10)
+  draw ctx options
